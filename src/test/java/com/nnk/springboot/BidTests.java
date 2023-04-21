@@ -1,7 +1,6 @@
 package com.nnk.springboot;
 
 import com.nnk.springboot.controllers.BidListController;
-import com.nnk.springboot.controllers.HomeController;
 import com.nnk.springboot.domain.BidList;
 import com.nnk.springboot.repositories.BidListRepository;
 import org.junit.Assert;
@@ -10,14 +9,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.Model;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,22 +87,21 @@ public class BidTests {
 	}
 
 	@Test
-	public void testShowUpdateForm() throws Exception {
-		// Create a test BidList object
-		BidList testBidList = new BidList();
-		testBidList.setId(1);
-		testBidList.setAccount("testAccount");
-		testBidList.setType("testType");
-		testBidList.setBidQuantity(100.0);
+	public void testAddBidForm() throws Exception {
+		// Create a mock bid object
+		BidList bid = new BidList();
+		bid.setId(1);
+		bid.setAccount("Test Account");
+		bid.setType("Test Type");
 
-		// Stub the bidListRepository.findById method to return the test BidList object
-		given(bidListRepository.findById(1)).willReturn(Optional.of(testBidList));
+		// Perform a GET request to the /bidList/add endpoint and pass the mock bid object as a parameter
+		MvcResult result = mockMvc.perform(get("/bidList/add").flashAttr("bid", bid)).andReturn();
 
-		// Perform a GET request to the /bidList/update/{id} endpoint and check the response
-		mockMvc.perform(get("/bidList/update/1"))
-				.andExpect(status().isOk())
-				.andExpect(view().name("bidList/update"))
-				.andExpect(model().attribute("bidList", testBidList));
+		// Assert that the response status is OK
+		assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
+
+		// Assert that the view name is "bidList/add"
+		assertEquals("bidList/add", result.getModelAndView().getViewName());
 	}
 
 
