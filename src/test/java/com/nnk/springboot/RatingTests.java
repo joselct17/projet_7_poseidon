@@ -7,10 +7,12 @@ import com.nnk.springboot.domain.Rating;
 import com.nnk.springboot.repositories.CurvePointRepository;
 import com.nnk.springboot.repositories.RatingRepository;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,7 +20,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +56,13 @@ public class RatingTests {
 	@InjectMocks
 	private RatingController ratingController;
 
+	@Mock
+	private BindingResult bindingResult;
+
+	@Before
+	public void setup() {
+		mockMvc = MockMvcBuilders.standaloneSetup(ratingController).build();
+	}
 	@Test
 	public void ratingTest() {
 		Rating rating = new Rating(1,"moodysRating", "sandPRating", "fitchRating", 10 );
@@ -106,5 +119,76 @@ public class RatingTests {
 
 		// Assert that the view name is "/rating/add"
 		assertEquals("rating/add", result.getModelAndView().getViewName());
+	}
+
+	@Test
+	public void testPostRating_Success() throws Exception {
+
+		//Arrange
+		Rating rating = new Rating();
+		rating.setId(1);
+		rating.setFitchRating("Fitch test");
+		rating.setOrderNumber(1);
+		rating.setSandPRating("Sand test");
+
+		//Act
+		mockMvc.perform(MockMvcRequestBuilders.post("/rating/validate")
+						.flashAttr("rating", rating))
+				.andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+				.andExpect(MockMvcResultMatchers.redirectedUrl("/rating/list"));
+
+		//Assert
+		Mockito.verify(ratingRepositoryMock, Mockito.times(1)).save(rating);
+		Mockito.verify(ratingRepositoryMock, Mockito.times(1)).findAll();
+
+	}
+
+	@Test
+	public void testGetUpdateForm() throws Exception {
+		// Arrange
+		Rating rating = new Rating();
+		rating.setId(1);
+		Mockito.when(ratingRepositoryMock.findById(1)).thenReturn(Optional.of(rating));
+
+		// Act
+		mockMvc.perform(MockMvcRequestBuilders.get("/rating/update/{id}", 1))
+				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.view().name("rating/update"))
+				.andExpect(MockMvcResultMatchers.model().attributeExists("rating"))
+				.andExpect(MockMvcResultMatchers.model().attribute("rating", rating));
+
+		// Assert
+		Mockito.verify(ratingRepositoryMock, Mockito.times(1)).findById(1);
+	}
+
+	@Test
+	public void testPostUpdateFormAndRedirect_SUCCESS() {
+		// Arrange
+		Integer id = 1;
+		Rating rating = new Rating();
+		when(bindingResult.hasErrors()).thenReturn(false);
+		when(ratingRepositoryMock.save(rating)).thenReturn(null);
+
+		// Act
+		String result = ratingController.updateRating(id, rating, bindingResult, model);
+
+		// Assert
+		verify(ratingRepositoryMock).save(rating);
+		verify(model).addAttribute(eq("ratings"), anyList());
+		assertEquals("redirect:/rating/list", result);
+	}
+	@Test
+	public void updateRating_shouldReturnUpdateViewWhenBindingResultHasErrors() {
+		// Arrange
+		Integer id = 1;
+		Rating rating = new Rating();
+		when(bindingResult.hasErrors()).thenReturn(true);
+
+		// Act
+		String result = ratingController.updateRating(id, rating, bindingResult, model);
+
+		// Assert
+		verifyNoInteractions(ratingRepositoryMock);
+		assertEquals("rating/update", result);
 	}
 }
