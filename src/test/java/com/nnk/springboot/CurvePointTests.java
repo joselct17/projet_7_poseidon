@@ -5,10 +5,12 @@ import com.nnk.springboot.domain.BidList;
 import com.nnk.springboot.domain.CurvePoint;
 import com.nnk.springboot.repositories.CurvePointRepository;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,7 +18,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -46,6 +52,14 @@ public class CurvePointTests {
 	private Model model;
 	@InjectMocks
 	private CurveController curveController;
+
+	@Mock
+	private BindingResult bindingResult;
+
+	@Before
+	public void setup() {
+		mockMvc = MockMvcBuilders.standaloneSetup(curveController).build();
+	}
 
 	@Test
 	public void curvePointTest() {
@@ -103,6 +117,78 @@ public class CurvePointTests {
 
 		// Assert that the view name is "/curvePoint/add"
 		assertEquals("curvePoint/add", result.getModelAndView().getViewName());
+	}
+
+	@Test
+	public void testPostCurvePoint_Success() throws Exception {
+
+		//Arrange
+		CurvePoint curvePoint = new CurvePoint();
+		curvePoint.setId(1);
+		curvePoint.setTerm(valueOf(20));
+		curvePoint.setCurveId(1);
+		curvePoint.setValue(valueOf(20));
+
+		//Act
+		mockMvc.perform(MockMvcRequestBuilders.post("/curvePoint/validate")
+						.flashAttr("curvePoint", curvePoint))
+				.andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+				.andExpect(MockMvcResultMatchers.redirectedUrl("/curvePoint/list"));
+
+		//Assert
+		Mockito.verify(curvePointRepositoryMock, Mockito.times(1)).save(curvePoint);
+		Mockito.verify(curvePointRepositoryMock, Mockito.times(1)).findAll();
+
+	}
+
+	@Test
+	public void testGetUpdateForm() throws Exception {
+		// Arrange
+		CurvePoint curvePoint = new CurvePoint();
+		curvePoint.setId(1);
+		Mockito.when(curvePointRepositoryMock.findById(1)).thenReturn(Optional.of(curvePoint));
+
+		// Act
+		mockMvc.perform(MockMvcRequestBuilders.get("/curvePoint/update/{id}", 1))
+				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.view().name("curvePoint/update"))
+				.andExpect(MockMvcResultMatchers.model().attributeExists("curvePoint"))
+				.andExpect(MockMvcResultMatchers.model().attribute("curvePoint", curvePoint));
+
+		// Assert
+		Mockito.verify(curvePointRepositoryMock, Mockito.times(1)).findById(1);
+	}
+
+	@Test
+	public void testPostUpdateFormAndRedirect_SUCCESS() {
+		// Arrange
+		Integer id = 1;
+		CurvePoint curvePoint = new CurvePoint();
+		when(bindingResult.hasErrors()).thenReturn(false);
+		when(curvePointRepositoryMock.save(curvePoint)).thenReturn(null);
+
+		// Act
+		String result = curveController.updateCurve(id, curvePoint, bindingResult, model);
+
+		// Assert
+		verify(curvePointRepositoryMock).save(curvePoint);
+		verify(model).addAttribute(eq("curvePoint"), anyList());
+		assertEquals("redirect:/curvePoint/list", result);
+	}
+
+	@Test
+	public void updateCurve_shouldReturnUpdateViewWhenBindingResultHasErrors() {
+		// Arrange
+		Integer id = 1;
+		CurvePoint curvePoint = new CurvePoint();
+		when(bindingResult.hasErrors()).thenReturn(true);
+
+		// Act
+		String result = curveController.updateCurve(id, curvePoint, bindingResult, model);
+
+		// Assert
+		verifyNoInteractions(curvePointRepositoryMock);
+		assertEquals("curvePoint/update", result);
 	}
 
 
