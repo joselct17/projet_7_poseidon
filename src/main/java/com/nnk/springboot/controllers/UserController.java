@@ -1,6 +1,8 @@
 package com.nnk.springboot.controllers;
 
+import com.nnk.springboot.domain.Role;
 import com.nnk.springboot.domain.User;
+import com.nnk.springboot.repositories.RolesRepository;
 import com.nnk.springboot.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.List;
 
 
 @Controller
@@ -24,17 +27,25 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RolesRepository roleRepository;
+
     @RequestMapping("/user/list")
     public String home(Model model)
     {
         model.addAttribute("users", userRepository.findAll());
+        model.addAttribute("allRoles", roleRepository.findAll() );
         logger.info("REQUEST:/user/list");
         return "user/list";
     }
 
     @GetMapping("/user/add")
-    public String addUser(User bid) {
+    public String addUser(User bid , Model model) {
         logger.info("GET:/user/add");
+
+        List<Role> roles = (List<Role>) roleRepository.findAll();
+        model.addAttribute("allRoles", roles);
+
         return "user/add";
     }
 
@@ -45,6 +56,7 @@ public class UserController {
             user.setPassword(encoder.encode(user.getPassword()));
             userRepository.save(user);
             model.addAttribute("users", userRepository.findAll());
+            model.addAttribute("allRoles", roleRepository.findAll() );
             logger.info("redirect:/user/list");
             return "redirect:/user/list";
         }
@@ -57,6 +69,7 @@ public class UserController {
         User user = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
         user.setPassword("");
         model.addAttribute("user", user);
+        model.addAttribute("allRoles", roleRepository.findAll() );
         logger.info("GET:/user/update");
         return "user/update";
     }
@@ -74,6 +87,7 @@ public class UserController {
         user.setId(id);
         userRepository.save(user);
         model.addAttribute("users", userRepository.findAll());
+        model.addAttribute("allRoles", roleRepository.findAll() );
         logger.info("redirect:/user/list");
         return "redirect:/user/list";
     }
@@ -82,7 +96,9 @@ public class UserController {
     public String deleteUser(@PathVariable("id") Integer id, Model model) {
         User user = userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Invalid user Id:" + id));
         userRepository.delete(user);
+
         model.addAttribute("users", userRepository.findAll());
+        model.addAttribute("allRoles", roleRepository.findAll() );
         logger.info("GET:/user/delete");
         return "redirect:/user/list";
     }
