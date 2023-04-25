@@ -4,20 +4,20 @@ import com.nnk.springboot.controllers.BidListController;
 import com.nnk.springboot.domain.BidList;
 import com.nnk.springboot.repositories.BidListRepository;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.Model;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.validation.BindingResult;
+
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -26,26 +26,28 @@ import java.util.Optional;
 
 import static java.lang.Double.valueOf;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 
 @RunWith(SpringRunner.class)
+@AutoConfigureMockMvc
 @SpringBootTest
 public class BidTests {
 
 	@Autowired
 	BidListRepository bidListRepositorys ;
 	@Mock
-	private BidListRepository bidListRepository;
+	private BidListRepository bidListRepositoryMock;
 
 	@Mock
 	private Model model;
 
 	@Autowired
 	private MockMvc mockMvc;
+	@Mock
+	private BindingResult bindingResult;
+
 
 	@InjectMocks
 	private BidListController bidListController;
@@ -79,7 +81,7 @@ public class BidTests {
 	@Test
 	public void testGetBidList() {
 		// Arrange
-		when(bidListRepository.findAll()).thenReturn(new ArrayList<BidList>());
+		when(bidListRepositoryMock.findAll()).thenReturn(new ArrayList<BidList>());
 
 		// Act
 		String viewName = bidListController.home(model);
@@ -90,7 +92,7 @@ public class BidTests {
 	}
 
 	@Test
-	public void testAddBidForm() throws Exception {
+	public void testGetAddBidForm() throws Exception {
 		// Create a mock bid object
 		BidList bid = new BidList();
 		bid.setId(1);
