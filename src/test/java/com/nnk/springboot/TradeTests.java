@@ -7,10 +7,12 @@ import com.nnk.springboot.domain.Trade;
 import com.nnk.springboot.repositories.RuleNameRepository;
 import com.nnk.springboot.repositories.TradeRepository;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,7 +20,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -50,6 +56,14 @@ public class TradeTests {
 
 	@InjectMocks
 	private TradeController tradeController;
+
+	@Mock
+	private BindingResult bindingResult;
+
+	@Before
+	public void setup() {
+		mockMvc = MockMvcBuilders.standaloneSetup(tradeController).build();
+	}
 
 	@Test
 	public void tradeTest() {
@@ -94,11 +108,6 @@ public class TradeTests {
 		// Create a mock rule object
 		Trade trade = new Trade();
 
-		trade.setId(1);
-		trade.setAccount("Account test");
-		trade.setBook("Book test");
-		trade.setCreationDate(new Timestamp(20));
-		trade.setBenchmark("Benchmark test");
 
 		// Perform a GET request to the /ruleName/add endpoint and pass the mock bid object as a parameter
 		MvcResult result = mockMvc.perform(get("/trade/add").flashAttr("trade", trade)).andReturn();
@@ -108,6 +117,83 @@ public class TradeTests {
 
 		// Assert that the view name is "/ruleName/add"
 		assertEquals("trade/add", result.getModelAndView().getViewName());
+	}
+
+
+	@Test
+	public void testPostTrade_Success() throws Exception {
+
+		// Arrange
+		Trade trade = new Trade();
+
+		trade.setId(1);
+		trade.setAccount("Account test");
+		trade.setBook("Book test");
+		trade.setCreationDate(new Timestamp(20));
+		trade.setBenchmark("Benchmark test");
+
+
+		//Act
+		mockMvc.perform(MockMvcRequestBuilders.post("/trade/validate")
+						.flashAttr("trade", trade))
+				.andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+				.andExpect(MockMvcResultMatchers.redirectedUrl("/trade/list"));
+
+		//Assert
+		Mockito.verify(tradeRepositoryMock, Mockito.times(1)).save(trade);
+		Mockito.verify(tradeRepositoryMock, Mockito.times(1)).findAll();
+
+	}
+
+	@Test
+	public void testGetUpdateForm() throws Exception {
+		// Arrange
+		Trade trade = new Trade();
+		trade.setId(1);
+		Mockito.when(tradeRepositoryMock.findById(1)).thenReturn(Optional.of(trade));
+
+		// Act
+		mockMvc.perform(MockMvcRequestBuilders.get("/trade/update/{id}", 1))
+				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.view().name("trade/update"))
+				.andExpect(MockMvcResultMatchers.model().attributeExists("trade"))
+				.andExpect(MockMvcResultMatchers.model().attribute("trade", trade));
+
+		// Assert
+		Mockito.verify(tradeRepositoryMock, Mockito.times(1)).findById(1);
+	}
+
+	@Test
+	public void testPostUpdateFormAndRedirect_SUCCESS() {
+		// Arrange
+		Integer id = 1;
+		Trade trade = new Trade();
+
+		when(bindingResult.hasErrors()).thenReturn(false);
+		when(tradeRepositoryMock.save(trade)).thenReturn(null);
+
+		// Act
+		String result = tradeController.updateTrade(id, trade, bindingResult, model);
+
+		// Assert
+		verify(tradeRepositoryMock).save(trade);
+		verify(model).addAttribute(eq("trades"), anyList());
+		assertEquals("redirect:/trade/list", result);
+	}
+
+	@Test
+	public void updateTrade_shouldReturnUpdateViewWhenBindingResultHasErrors() {
+		// Arrange
+		Integer id = 1;
+		Trade trade = new Trade();
+		when(bindingResult.hasErrors()).thenReturn(true);
+
+		// Act
+		String result = tradeController.updateTrade(id, trade, bindingResult, model);
+
+		// Assert
+		verifyNoInteractions(tradeRepositoryMock);
+		assertEquals("trade/update", result);
 	}
 
 }
