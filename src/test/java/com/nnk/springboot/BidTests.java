@@ -19,10 +19,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.Model;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.Double.valueOf;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -34,7 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 public class BidTests {
 
-
+	@Autowired
+	BidListRepository bidListRepositorys ;
 	@Mock
 	private BidListRepository bidListRepository;
 
@@ -50,26 +53,26 @@ public class BidTests {
 
 	@Test
 	public void bidListTest() {
-		BidList bid = new BidList();
+		BidList bid = new BidList(10, "Account Test", "Type Test", valueOf(20), valueOf(20),valueOf(20),valueOf(20),"Benchmark Test", new Timestamp(10), "commentary test", "security test", "status test", "trader test", "book test", "creationName", new Timestamp(20L), "revisionName", new Timestamp(20), " dealName", "dealType", "sourceListId" , "side");
 
 		// Save
-		bid = bidListRepository.save(bid);
+		bid = bidListRepositorys.save(bid);
 		Assert.assertNotNull(bid.getId());
-		assertEquals(bid.getBidQuantity(), 10d, 10d);
+		Assert.assertEquals(bid.getBidQuantity(), 10d, 10d);
 
 		// Update
 		bid.setBidQuantity(20d);
-		bid = bidListRepository.save(bid);
-		assertEquals(bid.getBidQuantity(), 20d, 20d);
+		bid = bidListRepositorys.save(bid);
+		Assert.assertEquals(bid.getBidQuantity(), 20d, 20d);
 
 		// Find
-		List<BidList> listResult = bidListRepository.findAll();
+		List<BidList> listResult = bidListRepositorys.findAll();
 		Assert.assertTrue(listResult.size() > 0);
 
 		// Delete
 		Integer id = bid.getId();
-		bidListRepository.delete(bid);
-		Optional<BidList> bidList = bidListRepository.findById(id);
+		bidListRepositorys.delete(bid);
+		Optional<BidList> bidList = bidListRepositorys.findById(id);
 		Assert.assertFalse(bidList.isPresent());
 	}
 
