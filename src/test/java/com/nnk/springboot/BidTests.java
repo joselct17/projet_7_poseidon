@@ -4,10 +4,12 @@ import com.nnk.springboot.controllers.BidListController;
 import com.nnk.springboot.domain.BidList;
 import com.nnk.springboot.repositories.BidListRepository;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,6 +17,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 
@@ -36,7 +41,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 public class BidTests {
 
 	@Autowired
-	BidListRepository bidListRepositorys ;
+	BidListRepository bidListRepository;
 	@Mock
 	private BidListRepository bidListRepositoryMock;
 
@@ -52,29 +57,33 @@ public class BidTests {
 	@InjectMocks
 	private BidListController bidListController;
 
+	@Before
+	public void setup() {
+		mockMvc = MockMvcBuilders.standaloneSetup(bidListController).build();
+	}
 
 	@Test
 	public void bidListTest() {
 		BidList bid = new BidList(10, "Account Test", "Type Test", valueOf(20), valueOf(20),valueOf(20),valueOf(20),"Benchmark Test", new Timestamp(10), "commentary test", "security test", "status test", "trader test", "book test", "creationName", new Timestamp(20L), "revisionName", new Timestamp(20), " dealName", "dealType", "sourceListId" , "side");
 
 		// Save
-		bid = bidListRepositorys.save(bid);
+		bid = bidListRepository.save(bid);
 		Assert.assertNotNull(bid.getId());
 		Assert.assertEquals(bid.getBidQuantity(), 10d, 10d);
 
 		// Update
 		bid.setBidQuantity(20d);
-		bid = bidListRepositorys.save(bid);
+		bid = bidListRepository.save(bid);
 		Assert.assertEquals(bid.getBidQuantity(), 20d, 20d);
 
 		// Find
-		List<BidList> listResult = bidListRepositorys.findAll();
+		List<BidList> listResult = bidListRepository.findAll();
 		Assert.assertTrue(listResult.size() > 0);
 
 		// Delete
 		Integer id = bid.getId();
-		bidListRepositorys.delete(bid);
-		Optional<BidList> bidList = bidListRepositorys.findById(id);
+		bidListRepository.delete(bid);
+		Optional<BidList> bidList = bidListRepository.findById(id);
 		Assert.assertFalse(bidList.isPresent());
 	}
 
@@ -94,7 +103,7 @@ public class BidTests {
 	@Test
 	public void testGetAddBidForm() throws Exception {
 		// Create a mock bid object
-		BidList bid = new BidList();
+		BidList bid = new BidList(10, "Account Test", "Type Test", valueOf(20), valueOf(20),valueOf(20),valueOf(20),"Benchmark Test", new Timestamp(10), "commentary test", "security test", "status test", "trader test", "book test", "creationName", new Timestamp(20L), "revisionName", new Timestamp(20), " dealName", "dealType", "sourceListId" , "side");
 		bid.setId(1);
 		bid.setAccount("Test Account");
 		bid.setType("Test Type");
@@ -109,6 +118,78 @@ public class BidTests {
 		assertEquals("bidList/add", result.getModelAndView().getViewName());
 	}
 
+	@Test
+	public void testPostValidate_Success() throws Exception {
+
+		//Arrange
+		BidList bidList = new BidList();
+		bidList.setAccount("Test Account");
+		bidList.setType("Test Type");
+		bidList.setBidQuantity(1000d);
+
+		//Act
+		mockMvc.perform(MockMvcRequestBuilders.post("/bidList/validate")
+				.flashAttr("bidList", bidList))
+				.andExpect(MockMvcResultMatchers.status().is3xxRedirection())
+				.andExpect(MockMvcResultMatchers.redirectedUrl("/bidList/list"));
+
+		//Assert
+		Mockito.verify(bidListRepositoryMock, Mockito.times(1)).save(bidList);
+		Mockito.verify(bidListRepositoryMock, Mockito.times(1)).findAll();
+
+	}
+
+
+	@Test
+	public void testGetUpdateForm() throws Exception {
+		// Arrange
+		BidList bidList = new BidList();
+		bidList.setId(1);
+		Mockito.when(bidListRepositoryMock.findById(1)).thenReturn(Optional.of(bidList));
+
+		// Act
+		mockMvc.perform(MockMvcRequestBuilders.get("/bidList/update/{id}", 1))
+				.andExpect(MockMvcResultMatchers.status().isOk())
+				.andExpect(MockMvcResultMatchers.view().name("bidList/update"))
+				.andExpect(MockMvcResultMatchers.model().attributeExists("bidList"))
+				.andExpect(MockMvcResultMatchers.model().attribute("bidList", bidList));
+
+		// Assert
+		Mockito.verify(bidListRepositoryMock, Mockito.times(1)).findById(1);
+	}
+
+
+	@Test
+	public void testPostUpdateFormAndRedirect_SUCCESS() {
+		// Arrange
+		Integer id = 1;
+		BidList bidList = new BidList();
+		when(bindingResult.hasErrors()).thenReturn(false);
+		when(bidListRepositoryMock.save(bidList)).thenReturn(null);
+
+		// Act
+		String result = bidListController.updateBid(id, bidList, bindingResult, model);
+
+		// Assert
+		verify(bidListRepositoryMock).save(bidList);
+		verify(model).addAttribute(eq("bidLists"), anyList());
+		assertEquals("redirect:/bidList/list", result);
+	}
+
+	@Test
+	public void updateBid_shouldReturnUpdateViewWhenBindingResultHasErrors() {
+		// Arrange
+		Integer id = 1;
+		BidList bidList = new BidList();
+		when(bindingResult.hasErrors()).thenReturn(true);
+
+		// Act
+		String result = bidListController.updateBid(id, bidList, bindingResult, model);
+
+		// Assert
+		verifyNoInteractions(bidListRepositoryMock);
+		assertEquals("bidList/update", result);
+	}
 
 
 }
