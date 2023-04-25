@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <title> Spring Boot </title>
     <link rel="stylesheet" href="/css/styles.css"/>
@@ -7,8 +7,14 @@
 </head>
 <body>
 <h3> HOME PAGE </h3>
+<div sec:authorize="isAuthenticated()">
+    Logged in user: <b th:inline="text"  class="user" sec:authentication="principal.username">  </b>
+    <form th:action="@{/logout}" method="POST">
+        <input type="submit" value="Logout"/>
+    </form>
+</div>
 <p>
-    <a href="/login">Login</a> or create one <a href="/user/list">User management</a> <a  href="/trade/list">Trade management</a><a href="/ruleName/list"> Rule management</a> <a href="/rating/list"> Rating Management</a><a href="/curvePoint/list">Curve Point management</a><a href="/bidList/list">Bid List management</a>
+    <a sec:authorize="isAnonymous()" href="/login">Login</a> <p sec:authorize="isAuthenticated()"> or create one <a href="/user/list" sec:authorize="hasRole('ADMIN')">User management</a> <a  href="/trade/list">Trade management</a><a href="/ruleName/list"> Rule management</a> <a href="/rating/list"> Rating Management</a><a href="/curvePoint/list">Curve Point management</a><a href="/bidList/list">Bid List management</a></p>
 </p>
 </body>
 </html>
