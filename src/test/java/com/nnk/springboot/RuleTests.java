@@ -12,8 +12,12 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.ui.Model;
 
 import java.util.ArrayList;
@@ -24,14 +28,22 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 @RunWith(SpringRunner.class)
+@AutoConfigureMockMvc
 @SpringBootTest
 public class RuleTests {
 
 	@Mock
+	private RuleNameRepository ruleNameRepositoryMock;
+
+	@Autowired
 	private RuleNameRepository ruleNameRepository;
 
+	@Autowired
+
+	private MockMvc mockMvc;
 	@Mock
 	private Model model;
 
@@ -40,7 +52,7 @@ public class RuleTests {
 
 	@Test
 	public void ruleTest() {
-		RuleName rule = new RuleName();
+		RuleName rule = new RuleName(1, "Rule Name", "description", "json","template", "sqlStr", "sqlPart"  );
 
 		// Save
 		rule = ruleNameRepository.save(rule);
@@ -65,9 +77,9 @@ public class RuleTests {
 
 
 	@Test
-	public void testGetBidList() {
+	public void testGetRuleList() {
 		// Arrange
-		when(ruleNameRepository.findAll()).thenReturn(new ArrayList<RuleName>());
+		when(ruleNameRepositoryMock.findAll()).thenReturn(new ArrayList<RuleName>());
 
 		// Act
 		String viewName = ruleNameController.home(model);
@@ -75,5 +87,27 @@ public class RuleTests {
 		// Assert
 		verify(model, times(1)).addAttribute(eq("ruleNames"), any());
 		assertEquals("ruleName/list", viewName);
+	}
+
+
+	@Test
+	public void testAddRule() throws Exception {
+		// Create a mock rule object
+		RuleName rule = new RuleName();
+
+		rule.setId(1);
+		rule.setName("Name test");
+		rule.setJson("Json test");
+		rule.setTemplate("Template test");
+		rule.setSqlStr("SqlStr test");
+
+		// Perform a GET request to the /ruleName/add endpoint and pass the mock bid object as a parameter
+		MvcResult result = mockMvc.perform(get("/ruleName/add").flashAttr("rule", rule)).andReturn();
+
+		// Assert that the response status is OK
+		assertEquals(HttpStatus.OK.value(), result.getResponse().getStatus());
+
+		// Assert that the view name is "/ruleName/add"
+		assertEquals("ruleName/add", result.getModelAndView().getViewName());
 	}
 }
