@@ -3,19 +3,14 @@ package com.nnk.springboot;
 
 import com.nnk.springboot.controllers.BidListController;
 import com.nnk.springboot.controllers.UserController;
-import com.nnk.springboot.domain.BidList;
-import com.nnk.springboot.domain.Role;
-import com.nnk.springboot.domain.Trade;
-import com.nnk.springboot.domain.User;
+import com.nnk.springboot.domain.*;
 import com.nnk.springboot.repositories.RolesRepository;
 import com.nnk.springboot.repositories.UserRepository;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,6 +55,9 @@ public class UserTests {
 
     @InjectMocks
     private UserController userController;
+
+    @Captor
+    private ArgumentCaptor<User> captor;
 
     @Mock
     private Model model;
@@ -209,6 +207,23 @@ public class UserTests {
         // Assert
         verifyNoInteractions(userRepositoryMock);
         assertEquals("user/update", result);
+    }
+
+    @Test
+    public void testDeleteUser() {
+        // Arrange
+        User user = new User();
+        user.setId(1);
+        when(userRepositoryMock.findById(1)).thenReturn(Optional.of(user));
+
+        // Act
+        String result = userController.deleteUser(1, model);
+
+        // Assert
+        verify(userRepositoryMock).delete(captor.capture());
+        User deletedUser = captor.getValue();
+        assertEquals(user.getId(), deletedUser.getId());
+        assertEquals("redirect:/user/list", result);
     }
 
 

@@ -8,9 +8,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -53,6 +51,8 @@ public class CurvePointTests {
 	@InjectMocks
 	private CurveController curveController;
 
+	@Captor
+	private ArgumentCaptor<CurvePoint> captor;
 	@Mock
 	private BindingResult bindingResult;
 
@@ -189,6 +189,23 @@ public class CurvePointTests {
 		// Assert
 		verifyNoInteractions(curvePointRepositoryMock);
 		assertEquals("curvePoint/update", result);
+	}
+
+	@Test
+	public void testDeleteCurvePoint() {
+		// Arrange
+		CurvePoint curvePoint = new CurvePoint();
+		curvePoint.setId(1);
+		when(curvePointRepositoryMock.findById(1)).thenReturn(Optional.of(curvePoint));
+
+		// Act
+		String result = curveController.deleteCurve(1, model);
+
+		// Assert
+		verify(curvePointRepositoryMock).delete(captor.capture());
+		CurvePoint deletedCurvePoint = captor.getValue();
+		assertEquals(curvePoint.getId(), deletedCurvePoint.getId());
+		assertEquals("redirect:/curvePoint/list", result);
 	}
 
 

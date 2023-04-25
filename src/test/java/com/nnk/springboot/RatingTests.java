@@ -2,6 +2,7 @@ package com.nnk.springboot;
 
 import com.nnk.springboot.controllers.CurveController;
 import com.nnk.springboot.controllers.RatingController;
+import com.nnk.springboot.domain.BidList;
 import com.nnk.springboot.domain.CurvePoint;
 import com.nnk.springboot.domain.Rating;
 import com.nnk.springboot.repositories.CurvePointRepository;
@@ -10,9 +11,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -55,6 +54,8 @@ public class RatingTests {
 	private Model model;
 	@InjectMocks
 	private RatingController ratingController;
+	@Captor
+	private ArgumentCaptor<Rating> captor;
 
 	@Mock
 	private BindingResult bindingResult;
@@ -190,5 +191,22 @@ public class RatingTests {
 		// Assert
 		verifyNoInteractions(ratingRepositoryMock);
 		assertEquals("rating/update", result);
+	}
+
+	@Test
+	public void testDeleteRating() {
+		// Arrange
+		Rating rating = new Rating();
+		rating.setId(1);
+		when(ratingRepositoryMock.findById(1)).thenReturn(Optional.of(rating));
+
+		// Act
+		String result = ratingController.deleteRating(1, model);
+
+		// Assert
+		verify(ratingRepositoryMock).delete(captor.capture());
+		Rating deletedRating = captor.getValue();
+		assertEquals(rating.getId(), deletedRating.getId());
+		assertEquals("redirect:/rating/list", result);
 	}
 }

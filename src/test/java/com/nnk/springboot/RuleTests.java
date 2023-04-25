@@ -2,6 +2,8 @@ package com.nnk.springboot;
 
 import com.nnk.springboot.controllers.RatingController;
 import com.nnk.springboot.controllers.RuleNameController;
+import com.nnk.springboot.domain.BidList;
+import com.nnk.springboot.domain.CurvePoint;
 import com.nnk.springboot.domain.Rating;
 import com.nnk.springboot.domain.RuleName;
 import com.nnk.springboot.repositories.RatingRepository;
@@ -10,9 +12,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -52,6 +52,9 @@ public class RuleTests {
 	private MockMvc mockMvc;
 	@Mock
 	private Model model;
+
+	@Captor
+	private ArgumentCaptor<RuleName> captor;
 
 	@InjectMocks
 	private RuleNameController ruleNameController;
@@ -198,5 +201,22 @@ public class RuleTests {
 		// Assert
 		verifyNoInteractions(ruleNameRepositoryMock);
 		assertEquals("ruleName/update", result);
+	}
+
+	@Test
+	public void testDeleteRule() {
+		// Arrange
+		RuleName ruleName = new RuleName();
+		ruleName.setId(1);
+		when(ruleNameRepositoryMock.findById(1)).thenReturn(Optional.of(ruleName));
+
+		// Act
+		String result = ruleNameController.deleteRuleName(1, model);
+
+		// Assert
+		verify(ruleNameRepositoryMock).delete(captor.capture());
+		RuleName deletedRuleName = captor.getValue();
+		assertEquals(ruleName.getId(), deletedRuleName.getId());
+		assertEquals("redirect:/ruleName/list", result);
 	}
 }

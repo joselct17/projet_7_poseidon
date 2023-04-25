@@ -7,9 +7,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -53,6 +51,8 @@ public class BidTests {
 	@Mock
 	private BindingResult bindingResult;
 
+	@Captor
+	private ArgumentCaptor<BidList> captor;
 
 	@InjectMocks
 	private BidListController bidListController;
@@ -189,6 +189,23 @@ public class BidTests {
 		// Assert
 		verifyNoInteractions(bidListRepositoryMock);
 		assertEquals("bidList/update", result);
+	}
+
+	@Test
+	public void testDeleteBid() {
+		// Arrange
+		BidList bidList = new BidList();
+		bidList.setId(1);
+		when(bidListRepositoryMock.findById(1)).thenReturn(Optional.of(bidList));
+
+		// Act
+		String result = bidListController.deleteBid(1, model);
+
+		// Assert
+		verify(bidListRepositoryMock).delete(captor.capture());
+		BidList deletedBidList = captor.getValue();
+		assertEquals(bidList.getId(), deletedBidList.getId());
+		assertEquals("redirect:/bidList/list", result);
 	}
 
 

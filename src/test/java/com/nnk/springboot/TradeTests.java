@@ -2,6 +2,8 @@ package com.nnk.springboot;
 
 import com.nnk.springboot.controllers.RuleNameController;
 import com.nnk.springboot.controllers.TradeController;
+import com.nnk.springboot.domain.BidList;
+import com.nnk.springboot.domain.CurvePoint;
 import com.nnk.springboot.domain.RuleName;
 import com.nnk.springboot.domain.Trade;
 import com.nnk.springboot.repositories.RuleNameRepository;
@@ -10,9 +12,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -56,6 +56,9 @@ public class TradeTests {
 
 	@InjectMocks
 	private TradeController tradeController;
+
+	@Captor
+	private ArgumentCaptor<Trade> captor;
 
 	@Mock
 	private BindingResult bindingResult;
@@ -194,6 +197,23 @@ public class TradeTests {
 		// Assert
 		verifyNoInteractions(tradeRepositoryMock);
 		assertEquals("trade/update", result);
+	}
+
+	@Test
+	public void testDeleteTrade() {
+		// Arrange
+		Trade trade = new Trade();
+		trade.setId(1);
+		when(tradeRepositoryMock.findById(1)).thenReturn(Optional.of(trade));
+
+		// Act
+		String result = tradeController.deleteTrade(1, model);
+
+		// Assert
+		verify(tradeRepositoryMock).delete(captor.capture());
+		Trade deletedTrade = captor.getValue();
+		assertEquals(trade.getId(), deletedTrade.getId());
+		assertEquals("redirect:/trade/list", result);
 	}
 
 }
