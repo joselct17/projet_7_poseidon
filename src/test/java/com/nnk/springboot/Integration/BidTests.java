@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -18,7 +19,7 @@ public class BidTests {
     @Autowired
     private MockMvc mockMvc;
 
-
+    @WithMockUser
     @Test
     void PostRegistrationForm_shouldSucceedAndRedirected_BidList() throws Exception {
         mockMvc.perform(post("/bidList/validate")
@@ -34,6 +35,7 @@ public class BidTests {
                         .param("security", "security")
                         .param("status", "status")
                         .param("book", "book")
+                        .param("trader", "trader")
                         .param("creationName", "creationName")
                         .param("creationDate", "creationDate")
                         .param("revisionName", "revisionName")
