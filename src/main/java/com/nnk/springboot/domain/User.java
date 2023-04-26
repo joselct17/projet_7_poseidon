@@ -29,13 +29,8 @@ public class User {
     private String password;
     @NotBlank(message = "FullName is mandatory")
     private String fullname;
+    @NotBlank(message = "Role is mandatory")
+    private String roles;
 
-
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "id"),
-            inverseJoinColumns = @JoinColumn(name = "roles_id"))
-    private List<Role> roles = new ArrayList<>();
 
 }
