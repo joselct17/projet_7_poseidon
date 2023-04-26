@@ -3,12 +3,16 @@ package com.nnk.springboot.config.userdetails;
 import com.nnk.springboot.domain.User;
 import com.nnk.springboot.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,17 +22,14 @@ public class CustumDetailsService implements UserDetailsService {
 
 
     @Override
-    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(usernameOrEmail);
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUsername(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new UsernameNotFoundException(username);
 
-        if (user != null) {
-            return new org.springframework.security.core.userdetails.User(user.getUsername()
-                    , user.getPassword(),
-                    user.getRoles().stream()
-                            .map((role) -> new SimpleGrantedAuthority(role.getRoleName()))
-                            .collect(Collectors.toList()));
-        }else {
-            throw new UsernameNotFoundException("Invalid email or password");
-        }
+        Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
+        grantedAuthorities.add(new SimpleGrantedAuthority(user.getRoles()));
+
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), grantedAuthorities);
     }
 }
