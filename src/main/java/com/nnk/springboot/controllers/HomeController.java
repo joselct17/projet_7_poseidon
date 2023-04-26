@@ -6,13 +6,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.security.Principal;
+
 @Controller
 public class HomeController
 {
-	Logger logger = LoggerFactory.getLogger(CurveController.class);
+	Logger logger = LoggerFactory.getLogger(HomeController.class);
 
 	@RequestMapping("/")
-	public String home(Model model)
+	public String home(Model model, Principal user)
 	{
 		logger.info("GET:/home");
 		return "home";
