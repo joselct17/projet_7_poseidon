@@ -11,6 +11,14 @@
   <input type="password" id="password" name="password" required placeholder="Password">
     <input type="submit" value="Login">
 </form>
+<div class="container-fluid">
+    <div>
+        With GitHub: <a href="/oauth2/authorization/github">click here</a>
+    </div>
+    <div>
+        With Google: <a href="/oauth2/authorization/google">click here</a>
+    </div>
+</div>
 <p th:each="url : ${urls}">
     <a th:text="${url.key}" th:href="${url.value}">Client</a>
 </p>
