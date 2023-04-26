@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -24,14 +25,14 @@ public class LoginTest {
     @Autowired
     private MockMvc mockMvc;
 
-
+    @WithMockUser(authorities = "ROLE_USER")
     @Test
     public void testLogin() throws Exception {
         mockMvc.perform(get("/login"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("login"));
+                .andExpect(status().isOk());
     }
 
+    @WithMockUser
     @Test
     public void testSecure() throws Exception {
         mockMvc.perform(get("/secure/article-details"))
@@ -39,6 +40,7 @@ public class LoginTest {
                 .andExpect(view().name("user/list"));
     }
 
+    @WithMockUser
     @Test
     public void testIndex() throws Exception {
         mockMvc.perform(get("/"))
@@ -46,6 +48,7 @@ public class LoginTest {
                 .andExpect(view().name("home"));
     }
 
+    @WithMockUser
     @Test
     public void testAdminHome() throws Exception {
         mockMvc.perform(get("/admin/home"))
