@@ -1,6 +1,5 @@
 package com.nnk.springboot.config;
 
-import com.nnk.springboot.config.oauth.CustomOAuth2UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,10 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfiguration {
-
-    @Autowired
-    private CustomOAuth2UserService customOAuth2UserService;
+public class SecurityConfiguration  {
 
 
     /**
@@ -26,34 +22,50 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-                .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/**").permitAll()
-                        .requestMatchers("/login/**").permitAll()
-                        .requestMatchers("/bidList/**", "/curvePoint/**", "/rating/**", "/ruleName/**", "/trade/**", "/app/secure/**").authenticated()
-                        .requestMatchers("/user/list/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
-                .formLogin((form) -> form
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/")
-                        .permitAll()
-
-                )
-//               .oauth2Login((form) ->form
-//                       .userInfoEndpoint()
-//                       .userService(customOAuth2UserService)
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        http.csrf().disable()
+//                .authorizeHttpRequests((requests) -> requests
+//                        .requestMatchers("/**").permitAll()
+//                        .requestMatchers("/login/**").permitAll()
+//                        .requestMatchers("/bidList", "/curvePoint/**", "/rating/**", "/ruleName/**", "/trade/**", "/app/secure/**").authenticated()
+//                        .requestMatchers("/user").hasRole("ADMIN")
+//                        .anyRequest().authenticated()
+//
 //                )
+//                .formLogin((form) -> form
+//                        .loginPage("/login")
+//                        .loginProcessingUrl("/login")
+//                        .defaultSuccessUrl("/")
+//                        .permitAll()
+//
+//                )
+////               .oauth2Login((form) ->form
+////                       .userInfoEndpoint()
+////                )
+//
+//                .logout((logout) -> logout.permitAll()
+//                        .logoutSuccessUrl("/")
+//
+//                );
+//
+//        return http.build();
+//    }
 
-                .logout((logout) -> logout.permitAll()
-                        .logoutSuccessUrl("/")
-
-                );
-
-        return http.build();
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http.authorizeHttpRequests()
+                .requestMatchers("/admin").hasRole("ADMIN")
+                .requestMatchers("/user/**").hasRole("ADMIN")
+                .requestMatchers("/bidList/**", "/curvePoint/**", "/rating/**", "/ruleName/**", "/trade/**", "/app/secure/**").authenticated()
+                .anyRequest().authenticated()
+                .and()
+                .formLogin()
+                .and()
+                .httpBasic()
+                .and()
+                .csrf().disable()
+                .build();
     }
 
 
