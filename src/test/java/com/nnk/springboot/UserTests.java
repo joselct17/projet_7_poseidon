@@ -1,10 +1,8 @@
 package com.nnk.springboot;
 
 
-import com.nnk.springboot.controllers.BidListController;
 import com.nnk.springboot.controllers.UserController;
 import com.nnk.springboot.domain.*;
-import com.nnk.springboot.repositories.RolesRepository;
 import com.nnk.springboot.repositories.UserRepository;
 import org.junit.Assert;
 import org.junit.Before;
@@ -24,7 +22,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -47,8 +44,6 @@ public class UserTests {
     @Mock
     private UserRepository userRepositoryMock;
 
-    @Mock
-    private RolesRepository rolesRepositoryMock;
 
     @Autowired
     private MockMvc mockMvc;
@@ -76,7 +71,7 @@ public class UserTests {
 
     @Test
     public void userTest() {
-        User user = new User(1, "user@user.com", "passwordEncrypted", "User User", new ArrayList<>());
+        User user = new User(1, "user@user.com", "passwordEncrypted", "User User","USER");
         // Save
         user = userRepository.save(user);
         Assert.assertNotNull(user.getId());
@@ -103,7 +98,6 @@ public class UserTests {
         // Arrange
         when(userRepositoryMock.findAll()).thenReturn(new ArrayList<User>());
 
-        when(rolesRepositoryMock.findAll()).thenReturn(new ArrayList<Role>());
         // Act
         String viewName = userController.home(model);
 
@@ -141,6 +135,7 @@ public class UserTests {
         user.setUsername("user@user.com");
         user.setFullname("User User");
         user.setPassword("passwordEncrypted");
+        user.setRoles("USER");
 
 
         //Act
@@ -180,7 +175,7 @@ public class UserTests {
         Integer id = 1;
 
 
-        User user = new User(1,"user@user.com", "password", "User User" , new ArrayList<>());
+        User user = new User(1,"user@user.com", "password", "User User" ,"USER");
 
         when(bidingResult.hasErrors()).thenReturn(false);
         when(userRepositoryMock.save(user)).thenReturn(null);
