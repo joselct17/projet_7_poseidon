@@ -39,12 +39,9 @@
 			<div class="form-group">
 				<label for="password" class="col-sm-2 control-label">Role</label>
 				<div class="col-sm-10">
-					<input class="checkbox-inline" type="checkbox" name="roles"
-						   th:each="role : ${allRoles}"
-						   th:text="${role.roleName}"
-						   th:value="${role.id}"
-						   th:field="*{roles}"
-					/>
+					<label class="checkbox-inline"><input type="radio" th:field="*{roles}" th:value="ADMIN">Admin</label>
+					<label class="checkbox-inline"><input type="radio" th:field="*{roles}" th:value="USER">User</label>
+					<p class="text-danger" th:if="${#fields.hasErrors('roles')}" th:errors="*{roles}"></p>
 				</div>
 			</div>
 
