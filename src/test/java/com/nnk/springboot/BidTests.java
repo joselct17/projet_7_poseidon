@@ -104,9 +104,7 @@ public class BidTests {
 	public void testGetAddBidForm() throws Exception {
 		// Create a mock bid object
 		BidList bid = new BidList(10, "Account Test", "Type Test", valueOf(20), valueOf(20),valueOf(20),valueOf(20),"Benchmark Test", new Timestamp(10), "commentary test", "security test", "status test", "trader test", "book test", "creationName", new Timestamp(20L), "revisionName", new Timestamp(20), " dealName", "dealType", "sourceListId" , "side");
-		bid.setId(1);
-		bid.setAccount("Test Account");
-		bid.setType("Test Type");
+
 
 		// Perform a GET request to the /bidList/add endpoint and pass the mock bid object as a parameter
 		MvcResult result = mockMvc.perform(get("/bidList/add").flashAttr("bid", bid)).andReturn();
