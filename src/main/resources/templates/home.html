@@ -8,15 +8,23 @@
 <body>
 <h3> HOME PAGE </h3>
 <div sec:authorize="isAuthenticated()">
-    Logged in user: <b th:inline="text"  class="user"> <span th:if="${#authentication.principal instanceof T(org.springframework.security.oauth2.core.user.OAuth2User)}" th:text="${#authentication.principal.attributes['email'] ?: 'Unknown user'}">Unknown user</span>
+    Logged in user: <b th:inline="text"  class="user">
+    <span th:if="${#authentication.principal instanceof T(org.springframework.security.oauth2.core.user.OAuth2User)}"
+          th:text="${#authentication.principal.attributes['email'] ?: 'Unknown user'}">Unknown user</span>
     <span th:unless="${#authentication.principal instanceof T(org.springframework.security.oauth2.core.user.OAuth2User)}"
           th:text="${#authentication.principal.username}">Unknown user</span> </b>
-<form th:action="@{/logout}" method="POST">
+    <form th:action="@{/logout}" method="POST">
         <input type="submit" value="Logout"/>
     </form>
 </div>
 <p>
-    <a sec:authorize="isAnonymous()" href="/login">Login</a> <p sec:authorize="isAuthenticated()"> or create one <a href="/user/list" sec:authorize="hasRole('ROLE_ADMIN')">User management</a> <a  href="/trade/list">Trade management</a><a href="/ruleName/list"> Rule management</a> <a href="/rating/list"> Rating Management</a><a href="/curvePoint/list">Curve Point management</a><a href="/bidList/list">Bid List management</a></p>
+    <a sec:authorize="isAnonymous()" href="/login">Login</a>
+<p sec:authorize="isAuthenticated()"> or create one
+    <a href="/user/list" sec:authorize="hasRole('ROLE_ADMIN')">User management</a>
+    <a href="/trade/list">Trade management</a><a href="/ruleName/list"> Rule management</a>
+    <a href="/rating/list"> Rating Management</a>
+    <a href="/curvePoint/list">Curve Point management</a>
+    <a href="/bidList/list">Bid List management</a></p>
 </p>
 </body>
 </html>
