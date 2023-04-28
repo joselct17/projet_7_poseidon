@@ -10,6 +10,7 @@
 <div class="container">
 	<div class="row">
 		<div class="col-6">
+			<a sec:authorize="hasRole('ROLE_ADMIN')" href="/user/list">User List</a> |
 			<a href="/bidList/list">Bid List</a>&nbsp;|&nbsp;
 			<a href="/curvePoint/list">Curve Points</a>&nbsp;|&nbsp;
 			<a href="/rating/list">Ratings</a>&nbsp;|&nbsp;
@@ -17,8 +18,9 @@
 			<a href="/ruleName/list">Rule</a>
 		</div>
 		<div sec:authorize="isAuthenticated()" class="col-6 text-right">
-		Logged in user: <b th:inline="text"  class="user" sec:authentication="principal.username">  </b>
-		<form th:action="@{/logout}" method="POST">
+			Logged in user: <b th:inline="text"  class="user"> <span th:if="${#authentication.principal instanceof T(org.springframework.security.oauth2.core.user.OAuth2User)}" th:text="${#authentication.principal.attributes['email'] ?: 'Unknown user'}">Unknown user</span>
+			<span th:unless="${#authentication.principal instanceof T(org.springframework.security.oauth2.core.user.OAuth2User)}"
+				  th:text="${#authentication.principal.username}">Unknown user</span> </b>		<form th:action="@{/logout}" method="POST">
 			<input type="submit" value="Logout"/>
 		</form>
 	</div>
