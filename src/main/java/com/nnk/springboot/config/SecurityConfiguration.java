@@ -37,7 +37,7 @@ public class SecurityConfiguration  {
                 .oauth2Login()
                 .userInfoEndpoint().userService(customAuth2UserService)
                 .and()
-                .defaultSuccessUrl("/bidList/list")
+                .defaultSuccessUrl("/")
                 .and()
                 .httpBasic()
                 .and()
